@@ -12,4 +12,4 @@ council) or otherwise the individual controlling bodies will work for mutual ben
 ● Issued fines can be viewed by users and checkers.
 ● Online documentation and storage of the transactions.
 
-[**thiru's git**] (https://github.com/Thirumal-J/Quick-E-Park/edit/main/README.md)
+[**thiru's git**](https://github.com/Thirumal-J/Quick-E-Park/edit/main/README.md)
