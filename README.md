@@ -11,3 +11,8 @@ council) or otherwise the individual controlling bodies will work for mutual ben
 * Notification to users and checkers before parking tickets expire.
 * Issued fines can be viewed by users and checkers.
 * Online documentation and storage of the transactions.
+
+# Learning Purpose
+* For Database, Postgres is used. Using docker we don't need to install Postgres locally instead we can pull the docker image and use it.
+* Kindly use the following links to learn more about it.
+[Local Development Set-Up of PostgreSQL with Docker](https://towardsdatascience.com/local-development-set-up-of-postgresql-with-docker-c022632f13ea)
