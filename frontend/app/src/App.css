@@ -1,0 +1,91 @@
+body {
+  padding: 0px;
+  margin: 0px;
+  font-family: 'Ubuntu', sans-serif;
+}
+
+.app_name {
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  font-size: 20px;
+  color: #1a0a25;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.container {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  /* background-image: url(./components/images/bg5.jpg);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover; */
+  background: url(./components/images/bg5.jpg) no-repeat center center fixed; 
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+}
+
+.login,
+.register {
+  width: 500px;
+}
+
+.login h2,
+.register h2 {
+  font-size: 30px;
+  color:rgb(241, 116, 43);
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.login a {
+  text-align: center;
+}
+
+input[type='text'] {
+  background-color: #e6e6e6;
+  color: #573eca;
+  font-size: 16px;
+  margin-bottom: 20px;
+  border: none;
+  width: 85%;
+  padding: 20px 30px;
+}
+
+input[type='password'] {
+  background-color: #e6e6e6;
+  padding: 20px 30px;
+  color: #6564b6;
+  font-size: 16px;
+  margin-bottom: 20px;
+  border: none;
+  width: 85%;
+}
+
+input[type='submit'] {
+  padding: 20px 30px;
+  background-color: #272572;
+  color: #fff;
+  font-size: 20px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  border: none;
+  width: 50%;
+}
+
+.check {
+  font-size: 16px;
+}
+
+.vehicle_register {
+  
+}
+
+.links {
+  text-align: center;
+  line-break: normal;
+}
