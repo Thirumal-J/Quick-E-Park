@@ -69,23 +69,25 @@ def loginvalid():
     try:
         Username=request.json["User"]["Username"]
         Password=request.json["User"]["Password"]
+        status="success"
     except:
         status="error"
         status_who=statuswho.JSON_INPUT_INCORRECT
     try:
         conn =psycopg2.connect(dbname=DB_NAME,user=DB_USER,password=DB_PASS,host=DB_HOST)
         cur=conn.cursor()
-        SQL="select 1 from "+ User_table +" where Username in ('"+ Username +"') and PasswordHash in ('"+Password+"')"
-        cur.execute(SQL)
-        result=cur.fetchall()
-        status="success"
     except:
         status="error"
         status_who=statuswho.DB_CONNECTION_FAILED
     if status=="success":
         try:
+            SQL="select 1 from "+ User_table +" where Username in ('"+ Username +"') and PasswordHash in ('"+Password+"')"
+            cur.execute(SQL)
+            result=cur.fetchall()
             if result==[]:
                 result="No user found"
+                status="error"
+                status_who=statuswho.LOGIN_STATUS_FAIL
             else:
                 status="success"
                 status_who=statuswho.LOGIN_STATUS
@@ -96,7 +98,9 @@ def loginvalid():
             #print(SQL)
             status="error"
             status_who=statuswho.TABLE_DOESNOT_EXIST
+    if result==[]:
+            result=-1
     return retcommon_status.createJSONResponse(status,status_who,str(result))
 
 if __name__=="__main__":
-    app.run(port=5000)
+    app.run(port=5000,debug=True)

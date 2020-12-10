@@ -33,9 +33,9 @@
                 "status_code":"201",
                 "status_desc":"Email Error."
             },
-            "login":{
+            "login_fail":{
                 "status_code":"211",
-                "status_desc":"Login Error."
+                "status_desc":"Login Failed."
             },
             "dbcon_fail":{
                 "status_code":"221",
