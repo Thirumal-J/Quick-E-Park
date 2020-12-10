@@ -1,0 +1,28 @@
+{
+    "success":{
+        "status_type":0,        
+        "status_message":"Success",
+        "status":{
+            "Generic":{
+                "status_name":"100",
+                "status_desc":"GENERIC SUCCESS"
+            },
+            "":""
+        }
+    },
+    "errors":{
+        "status_type":1,
+        "status_message":"Error",
+        "status":{
+            "Generic":{
+                "status_code":"101",
+                "status_desc":"GENERIC ERROR"
+            }
+        }
+
+    },
+    "default":{
+        "message":"nothing to display"
+    }
+
+}
