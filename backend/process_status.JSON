@@ -7,7 +7,7 @@
                 "status_code":"100",
                 "status_desc":"GENERIC SUCCESS."
             },
-            "email":{
+            "email_succ":{
                 "status_code":"200",
                 "status_desc":"Email successfully sent."
             },
@@ -18,6 +18,10 @@
             "dbcon_suc":{
                 "status_code":"310",
                 "status_desc":"Database Connection Successful."
+            },
+            "res_pass_succ":{
+                "status_code":"240",
+                "status_desc":"Password successfully inserted"
             }
         }
     },
@@ -29,13 +33,13 @@
                 "status_code":"101",
                 "status_desc":"GENERIC ERROR."
             },
-            "email":{
+            "email_fail":{
                 "status_code":"201",
-                "status_desc":"Email Error."
+                "status_desc":"Email Not sent. Error in SMTP"
             },
             "login_fail":{
                 "status_code":"211",
-                "status_desc":"Login Failed."
+                "status_desc":"Input credentials incorrect."
             },
             "dbcon_fail":{
                 "status_code":"221",
@@ -48,6 +52,10 @@
             "notable":{
                 "status_code":"241",
                 "status_desc":"Table doesn't exist in database."
+            },
+            "res_pass_fail":{
+                "status_code":"241",
+                "status_desc":"Password insertion failed. User doesn't exist."
             }
         }
     },

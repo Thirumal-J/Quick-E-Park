@@ -3,7 +3,7 @@ from flask import jsonify
 
 response = {"status_code": "-1", "status_msg": "", "status_desc":"Recheck return json status method call", "status_type":"", "data":""}
 
-def createJSONResponse(status="default", status_who="NoWho", data="No Data Passed"):
+def createJSONResponse(status="default", status_who="NoWho", data="No Data To Display"):
     with open('process_status.JSON') as f:
       data_json = json.load(f)
     

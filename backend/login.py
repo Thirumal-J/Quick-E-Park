@@ -1,3 +1,4 @@
+#exception message printing pending
 from flask import Flask,make_response,request,jsonify
 import psycopg2
 import json
@@ -62,8 +63,6 @@ def loginvalid():
     result=-1
     status="default"
     status_who=""
-    exception_message=""
-    conn=""
     Username=""
     Password=""
     try:
