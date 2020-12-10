@@ -1,0 +1,3 @@
+GENERIC_STATUS="generic"
+EMAIL_STATUS="email"
+LOGIN_STATUS="login"

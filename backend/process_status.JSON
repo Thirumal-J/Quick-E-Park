@@ -3,13 +3,17 @@
         "status_type":0,        
         "status_message":"Success",
         "status":{
-            "Generic":{
+            "generic":{
                 "status_code":"100",
                 "status_desc":"GENERIC SUCCESS"
             },
-            "Email":{
+            "email":{
                 "status_code":"200",
                 "status_desc":"Email successfully sent"
+            },
+            "login":{
+                "status_code":"210",
+                "status_desc":"Login Successful"
             }
         }
     },
@@ -20,9 +24,16 @@
             "Generic":{
                 "status_code":"101",
                 "status_desc":"GENERIC ERROR"
+            },
+            "email":{
+                "status_code":"201",
+                "status_desc":"Email Error"
+            },
+            "login":{
+                "status_code":"211",
+                "status_desc":"Login Error"
             }
         }
-
     },
     "default":{
         "status_type":"-1",

@@ -4,14 +4,14 @@ import json
 import jwt
 import datetime
 from functools import wraps
-import constants
-import common
+import statuswho
+import retcommon_status
 
 app=Flask(__name__)
 
 app.config['SECRET_KEY']='secret'
 
-
+User_table="Users"
 def token_required(f):
     @wraps(f)
     def decorated(*args,**kwargs):
@@ -33,7 +33,7 @@ DB_NAME="QuickEPark"
 DB_USER="postgres"
 DB_PASS="Pass@123"
 
-User_table="Users"
+
 # conn =psycopg2.connect(dbname=DB_NAME,user=DB_USER,password=DB_PASS,host=DB_HOST)
 # cur=conn.cursor()
 # #cur.execute("CREATE TABLE Users (ID INT, Username varchar, PasswordHash varchar);")
@@ -60,6 +60,9 @@ def authe():
 #@token_required
 def loginvalid():
     result=-1
+    status="success"
+    status_who=statuswho.LOGIN_STATUS
+    exception_message=""
     try:
         conn =psycopg2.connect(dbname=DB_NAME,user=DB_USER,password=DB_PASS,host=DB_HOST)
         cur=conn.cursor()
@@ -69,24 +72,26 @@ def loginvalid():
             Username=request.json["User"]["Username"]
             Password=request.json["User"]["Password"]
         except:
-            print("Exception input user and password format")
+            status="error"
+            status_message+="login"
 
         SQL="select 1 from "+ User_table +" where Username in ('"+ Username +"') and PasswordHash in ('"+Password+"')"
         try:
             cur.execute(SQL)
             result=cur.fetchall()
         except:
-            print(SQL)
-            print("Table doesn't exist or null values found")
+            #print(SQL)
+            status_message+="Table doesn't exist or null values found. "
         if result==[]:
             result="No user found"
+            status_message=result
         else:
             result=result[0][0]
         conn.commit()
         conn.close()
     except:
         print("Invalid database")
-    return common.createJSONResponse(str(result))
+    return retcommon_status.createJSONResponse(status,status_who,str(result))
 
 if __name__=="__main__":
     app.run(port=5000,debug=True)
