@@ -4,13 +4,16 @@
         "status_message":"Success",
         "status":{
             "Generic":{
-                "status_name":"100",
+                "status_code":"100",
                 "status_desc":"GENERIC SUCCESS"
             },
-            "":""
+            "Email":{
+                "status_code":"200",
+                "status_desc":"Email successfully sent"
+            }
         }
     },
-    "errors":{
+    "error":{
         "status_type":1,
         "status_message":"Error",
         "status":{
@@ -22,7 +25,8 @@
 
     },
     "default":{
-        "message":"nothing to display"
+        "status_type":"-1",
+        "status_message":"nothing to display"
     }
 
 }

@@ -9,4 +9,3 @@ def createJSONResponse(outputJson, status_code= const.DEFAULT,status_msg=const.D
     response["status_type"] = status_type
     response["data"] = outputJson
     return jsonify(response)
-
