@@ -4,6 +4,8 @@ import json
 import jwt
 import datetime
 from functools import wraps
+import constants
+import common
 
 app=Flask(__name__)
 
@@ -84,7 +86,7 @@ def loginvalid():
         conn.close()
     except:
         print("Invalid database")
-    return str(result)
+    return common.createJSONResponse(str(result))
 
 if __name__=="__main__":
     app.run(port=5000,debug=True)
