@@ -60,38 +60,43 @@ def authe():
 #@token_required
 def loginvalid():
     result=-1
-    status="success"
-    status_who=statuswho.LOGIN_STATUS
+    status="default"
+    status_who=""
     exception_message=""
+    conn=""
+    Username=""
+    Password=""
+    try:
+        Username=request.json["User"]["Username"]
+        Password=request.json["User"]["Password"]
+    except:
+        status="error"
+        status_who=statuswho.JSON_INPUT_INCORRECT
     try:
         conn =psycopg2.connect(dbname=DB_NAME,user=DB_USER,password=DB_PASS,host=DB_HOST)
         cur=conn.cursor()
-        Username=""
-        Password=""
-        try:
-            Username=request.json["User"]["Username"]
-            Password=request.json["User"]["Password"]
-        except:
-            status="error"
-            status_message+="login"
-
         SQL="select 1 from "+ User_table +" where Username in ('"+ Username +"') and PasswordHash in ('"+Password+"')"
+        cur.execute(SQL)
+        result=cur.fetchall()
+        status="success"
+    except:
+        status="error"
+        status_who=statuswho.DB_CONNECTION_FAILED
+    if status=="success":
         try:
-            cur.execute(SQL)
-            result=cur.fetchall()
+            if result==[]:
+                result="No user found"
+            else:
+                status="success"
+                status_who=statuswho.LOGIN_STATUS
+                result=result[0][0]
+            conn.commit()
+            conn.close()
         except:
             #print(SQL)
-            status_message+="Table doesn't exist or null values found. "
-        if result==[]:
-            result="No user found"
-            status_message=result
-        else:
-            result=result[0][0]
-        conn.commit()
-        conn.close()
-    except:
-        print("Invalid database")
+            status="error"
+            status_who=statuswho.TABLE_DOESNOT_EXIST
     return retcommon_status.createJSONResponse(status,status_who,str(result))
 
 if __name__=="__main__":
-    app.run(port=5000,debug=True)
+    app.run(port=5000)

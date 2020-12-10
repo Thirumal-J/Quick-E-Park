@@ -1,3 +1,7 @@
 GENERIC_STATUS="generic"
 EMAIL_STATUS="email"
 LOGIN_STATUS="login"
+DB_CONNECTION_SUCCESS="dbcon_suc"
+DB_CONNECTION_FAILED="dbcon_fail"
+JSON_INPUT_INCORRECT="json_in_fail"
+TABLE_DOESNOT_EXIST="notable"

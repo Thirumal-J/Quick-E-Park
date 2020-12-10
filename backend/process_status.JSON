@@ -1,19 +1,23 @@
 {
     "success":{
         "status_type":0,        
-        "status_message":"Success",
+        "status_message":"Success.",
         "status":{
             "generic":{
                 "status_code":"100",
-                "status_desc":"GENERIC SUCCESS"
+                "status_desc":"GENERIC SUCCESS."
             },
             "email":{
                 "status_code":"200",
-                "status_desc":"Email successfully sent"
+                "status_desc":"Email successfully sent."
             },
             "login":{
                 "status_code":"210",
-                "status_desc":"Login Successful"
+                "status_desc":"Login Successful."
+            },
+            "dbcon_suc":{
+                "status_code":"310",
+                "status_desc":"Database Connection Successful."
             }
         }
     },
@@ -23,15 +27,27 @@
         "status":{
             "Generic":{
                 "status_code":"101",
-                "status_desc":"GENERIC ERROR"
+                "status_desc":"GENERIC ERROR."
             },
             "email":{
                 "status_code":"201",
-                "status_desc":"Email Error"
+                "status_desc":"Email Error."
             },
             "login":{
                 "status_code":"211",
-                "status_desc":"Login Error"
+                "status_desc":"Login Error."
+            },
+            "dbcon_fail":{
+                "status_code":"221",
+                "status_desc":"Database Connection Failed."
+            },
+            "json_in_fail":{
+                "status_code":"231",
+                "status_desc":"json header input entered in wrong format. Check JSON."
+            },
+            "notable":{
+                "status_code":"241",
+                "status_desc":"Table doesn't exist in database."
             }
         }
     },
