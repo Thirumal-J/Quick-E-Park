@@ -1,7 +1,13 @@
 from flask import Flask, request, jsonify
 import json
+import retcommon_status
 
 app = Flask(__name__)
+
+DB_HOST="192.168.99.100"
+DB_NAME="QuickEPark"
+DB_USER="postgres"
+DB_PASS="Pass@123"
 
 @app.route('/',)
 def index():
@@ -15,12 +21,13 @@ def saveloc():
  print(data)
  data_dic=json.loads(data)
  print(data_dic.keys())
- lat=data_dic['loc'][0]
- lon=data_dic['loc'][1]
+ lat=data_dic['lat']
+ lon=data_dic['lon']
  resp_dic={"lat":lat,"lon":lon}
  resp = jsonify(resp_dic)
  resp.headers['Access-Control-Allow-Origin']='*'
- return resp
+#  return resp
+return retcommon_status.createJSONResponse(status,status_who,str(result))
 
 
 
