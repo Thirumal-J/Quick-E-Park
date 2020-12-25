@@ -8,7 +8,7 @@
 
 --drop table tbl_User;
 
--- create table tbl_User (UID SERIAL PRIMARY KEY,Name varchar,Surname varchar,Email varchar,Password varchar,mobileno int,licenseno varchar,ActiveStatus bit,RegDate TIMESTAMP);
+--create table tbl_User (UID SERIAL PRIMARY KEY,Name varchar,Surname varchar,Email varchar UNIQUE NOT NULL,Password varchar,mobileno int,licenseno varchar UNIQUE NOT NULL,ActiveStatus bit,RegDate TIMESTAMP default now());
 
 -- create table tbl_parkdetails (UID int,ParkingActive bit,ParkingStartDate TIMESTAMP, ParkingEndDate TIMESTAMP,ParkingLocation varchar,ParkingFare int, ParkedCarRegNo varchar,CONSTRAINT fk_useridpark FOREIGN KEY(UID) REFERENCES tbl_User(UID));
 
@@ -17,6 +17,8 @@
 -- create table tbl_history (UID int, Name varchar,Surname varchar,Email varchar,ParkingStartDate TIMESTAMP, ParkingEndDate TIMESTAMP,ParkingLocation varchar,ParkingFare int,ParkedCarRegNo varchar,CONSTRAINT fk_useridhist FOREIGN KEY(UID) REFERENCES tbl_User(UID));
 
 -- create table tbl_penalty (UID int,ParkingFine int,FineDate TIMESTAMP,CONSTRAINT fk_useridfine FOREIGN KEY(UID) REFERENCES tbl_User(UID));
+
+--create view uv_getparkdetails as select uid,parkingstartdate,extract(epoch from (parkingenddate-now()) / 60 ) as timerremaining,parkinglocation,parkingfare,parkedcarregno from tbl_parkdetails where parkingactive in('1')
 
 select * from tbl_User;
 
