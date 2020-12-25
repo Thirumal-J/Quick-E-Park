@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 # Read me file for Database
 
+=======
+>>>>>>> 817e26c873335096ee4917446a6fc2ff8d02051f
 --drop table tbl_parkdetails;
 
 --drop table tbl_vehicles;
