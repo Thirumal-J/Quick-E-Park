@@ -117,7 +117,7 @@ def SendEmail(EmailId):
         with open('EmailTemplate.html', 'r') as f: 
             html_string = f.read()
         #mail_content = 'Body'
-        mail_content=html_strin
+        mail_content=html_string
         sender_address = 'mmicroservice@gmail.com'
         sender_pass = 'mmicroservice@123'
         receiver_address = EmailId

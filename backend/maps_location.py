@@ -26,8 +26,7 @@ def saveloc():
  resp_dic={"lat":lat,"lon":lon}
  resp = jsonify(resp_dic)
  resp.headers['Access-Control-Allow-Origin']='*'
-#  return resp
-return retcommon_status.createJSONResponse(status,status_who,str(result))
+ return retcommon_status.createJSONResponse(status,status_who,str(result))
 
 
 
