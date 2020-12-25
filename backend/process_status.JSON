@@ -22,6 +22,10 @@
             "res_pass_succ":{
                 "status_code":"240",
                 "status_desc":"Password successfully inserted"
+            },
+            "park_succ":{
+                "status_code":"250",
+                "status_desc":"Parking Successful"
             }
         }
     },
@@ -54,8 +58,20 @@
                 "status_desc":"Table doesn't exist in database."
             },
             "res_pass_fail":{
-                "status_code":"241",
+                "status_code":"242",
                 "status_desc":"Password insertion failed. User doesn't exist."
+            },
+            "parkexists":{
+                "status_code":"243",
+                "status_desc":"vehicle parking already exists"
+            },
+            "park_fail":{
+                "status_code":"244",
+                "status_desc":"Parking details insertion failed."
+            },
+            "emptydata":{
+                "status_code":"245",
+                "status_desc":"0 rows fetched."
             }
         }
     },

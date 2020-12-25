@@ -13,7 +13,7 @@ def createJSONResponse(status="default", status_who="NoWho", data="No Data To Di
       response["status_desc"]=  dict_status["status"][status_who]["status_desc"]
     response["status_msg"] =  dict_status["status_message"]
     response["status_type"] = dict_status["status_type"]
-    response["data"] = data
+    response["data"] =data
     return jsonify(response)
         
 

@@ -12,7 +12,7 @@ app=Flask(__name__)
 
 app.config['SECRET_KEY']='secret'
 
-User_table="Users"
+User_table="tbl_user"
 def token_required(f):
     @wraps(f)
     def decorated(*args,**kwargs):
@@ -30,9 +30,9 @@ def token_required(f):
     return decorated
 
 DB_HOST="192.168.99.100"
-DB_NAME="QuickEPark"
+DB_NAME="ARPB"
 DB_USER="postgres"
-DB_PASS="Pass@123"
+DB_PASS="Password"
 
 
 # conn =psycopg2.connect(dbname=DB_NAME,user=DB_USER,password=DB_PASS,host=DB_HOST)
@@ -65,6 +65,8 @@ def loginvalid():
     status_who=""
     Username=""
     Password=""
+    #jsonstr=json.loads(request.json,strict=False)
+    #print(jsonstr)
     try:
         Username=request.json["User"]["Username"]
         Password=request.json["User"]["Password"]
@@ -80,7 +82,7 @@ def loginvalid():
         status_who=statuswho.DB_CONNECTION_FAILED
     if status=="success":
         try:
-            SQL="select 1 from "+ User_table +" where Username in ('"+ Username +"') and PasswordHash in ('"+Password+"')"
+            SQL="select 1 from "+ User_table +" where email in ('"+ Username +"') and Password in ('"+Password+"')"
             cur.execute(SQL)
             result=cur.fetchall()
             if result==[]:
