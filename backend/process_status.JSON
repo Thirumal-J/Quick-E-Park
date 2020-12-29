@@ -4,7 +4,7 @@
         "status_message":"Success.",
         "status":{
             "generic":{
-                "status_code":"100",
+                "status_code":"200",
                 "status_desc":"GENERIC SUCCESS."
             },
             "email_succ":{
