@@ -65,11 +65,18 @@ def loginvalid():
     status_who=""
     Username=""
     Password=""
+    authentication=""
+    firstname=""
+    surname=""
+    email=""
+    licenseNumber=""
+    mobileNumber=""
+    jsonresult={}
     #jsonstr=json.loads(request.json,strict=False)
     #print(jsonstr)
     try:
-        Username=request.json["User"]["Username"]
-        Password=request.json["User"]["Password"]
+        Username=request.json["email"]
+        Password=request.json["password"]
         status="success"
     except:
         status="error"
@@ -86,13 +93,26 @@ def loginvalid():
             cur.execute(SQL)
             result=cur.fetchall()
             if result==[]:
-                result="No user found"
+                result="false"
                 status="error"
                 status_who=statuswho.LOGIN_STATUS_FAIL
             else:
-                status="success"
-                status_who=statuswho.LOGIN_STATUS
-                result=result[0][0]
+                try:
+                    status="success"
+                    status_who=statuswho.LOGIN_STATUS
+                    authentication="true"
+                    SQL="select name,surname,email,licenseno,mobileno from "+ User_table +" where email in ('"+ Username +"')"
+                    cur.execute(SQL)
+                    result=cur.fetchall()
+                    firstname=str(result[0][0])
+                    surname=str(result[0][1])
+                    email=str(result[0][2])
+                    licenseNumber=str(result[0][3])
+                    mobileNumber=str(result[0][4])
+                    jsonresult={"authentication": authentication,"email": email,"firstname": firstname,"surname":surname,"licenseNumber": licenseNumber,"mobileNumber": mobileNumber}
+                except:
+                    status_who=statuswho.TABLE_DOESNOT_EXIST
+                    status="error"
             conn.commit()
             conn.close()
         except:
@@ -101,7 +121,7 @@ def loginvalid():
             status_who=statuswho.TABLE_DOESNOT_EXIST
     if result==[]:
             result=-1
-    return retcommon_status.createJSONResponse(status,status_who,str(result))
-
+    return retcommon_status.createJSONResponse(status,status_who,jsonresult)
+    
 if __name__=="__main__":
     app.run(port=5000,debug=True)

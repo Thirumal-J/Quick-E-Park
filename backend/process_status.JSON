@@ -12,19 +12,19 @@
                 "status_desc":"Email successfully sent."
             },
             "login":{
-                "status_code":"210",
+                "status_code":"200",
                 "status_desc":"Login Successful."
             },
             "dbcon_suc":{
-                "status_code":"310",
+                "status_code":"200",
                 "status_desc":"Database Connection Successful."
             },
             "res_pass_succ":{
-                "status_code":"240",
+                "status_code":"200",
                 "status_desc":"Password successfully inserted"
             },
             "park_succ":{
-                "status_code":"250",
+                "status_code":"200",
                 "status_desc":"Parking Successful"
             }
         }
@@ -72,6 +72,10 @@
             "emptydata":{
                 "status_code":"245",
                 "status_desc":"0 rows fetched."
+            },
+            "update_fail":{
+                "status_code":"246",
+                "status_desc":"update to database failed."
             }
         }
     },

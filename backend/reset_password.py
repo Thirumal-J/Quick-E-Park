@@ -30,8 +30,8 @@ def createpassword_new():
     status="default"
     status_who=""
     try:
-        Username=request.json["User"]["Username"]
-        Password=request.json["User"]["Password"]
+        Username=request.json["email"]
+        Password=request.json["Password"]
         status="success"
     except:
         status="error"
@@ -71,7 +71,7 @@ def resetpassword():
     status="default"
     status_who=""
     try:
-        Username=request.json["User"]["Username"]
+        Username=request.json["email"]
         status="success"
     except:
         status="error"
@@ -85,7 +85,7 @@ def resetpassword():
     
     if status=="success":
         try:
-            SQL="select email from "+ User_table +" where Username in ('"+ Username +"')"
+            SQL="select email from "+ User_table +" where email in ('"+ Username +"')"
             cur.execute(SQL)
             result=cur.fetchall()
         except:
