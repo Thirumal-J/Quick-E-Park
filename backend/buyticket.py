@@ -185,8 +185,7 @@ def buyticket():
     return retcommon_status.createJSONResponse(status,status_who,jsonresult)
 
 
-@app.route("/extendticket",methods=['POST'])
-#@token_required
+@app.route("/extendTicket",methods=['POST'])
 def extendticket():
     result=-1
     status="default"
@@ -207,7 +206,7 @@ def extendticket():
         email=request.json["email"]
         carregno=request.json["parkedCarRegNo"]
         # parkStartDate=request.json["parking"]
-        minutesextended=request.json["minutesExtended"]
+        minutesextended=request.json["timeToExtend"]
         # parkloc=request.json["parkedLocation"]
         parkingemail=request.json["parkingEmail"]
         status="success"
