@@ -34,7 +34,8 @@ def index():
 @app.route("/viewticket",methods=['POST'])
 def viewticket():
     result=-1
-    jsonresult={}
+    # jsonresult={}
+    jsonresult=[]
     status="default"
     email=""
     status_who=""
@@ -43,6 +44,7 @@ def viewticket():
     parkinglocation=""
     parkingfare=""
     parkedcarregno=""
+    parkingEmail=""
     # carregno=""
     # minutesparking=""
     # parkloc=""
@@ -80,16 +82,22 @@ def viewticket():
                         status_who=statuswho.NO_DATA_TO_DISPLAY
                     else:
                         try:
-                            SQL="select parkingstartdate,timeremaining,parkinglocation,parkingfare,parkedcarregno from " + activepark_view + " where uid in ('" + uid + "')"
+                            SQL="select parkingstartdate,timeremaining,parkinglocation,parkingfare,parkedcarregno,parkingEmail from " + activepark_view + " where uid in ('" + uid + "')"
                             cur.execute(SQL)
                             result=cur.fetchall()
-                            parkdate=str(result[0][0])
-                            timeremaining=str(result[0][1])
-                            parkinglocation=str(result[0][2])
-                            parkingfare=str(result[0][3])
-                            parkedcarregno=str(result[0][4])
+                            for i in range(len(result)):
+                                parkdate=str(result[i][0])
+                                timeremaining=str(result[i][1])
+                                parkinglocation=str(result[i][2])
+                                parkingfare=str(result[i][3])
+                                parkedcarregno=str(result[i][4])
+                                parkingEmail=str(result[i][5]) 
+                                # if(len(jsonresult) is None):                               
+                                #     jsonresult={"parkingStartDate":parkdate,"remainingParkingDuration":timeremaining, "parkingLocation":parkinglocation, "parkingFare":parkingfare, "parkedCarRegNo":parkedcarregno,"parkingEmail":parkingEmail}
+                                # else:
+                                #     jsonresult=jsonresult+{"parkingStartDate":parkdate,"remainingParkingDuration":timeremaining, "parkingLocation":parkinglocation, "parkingFare":parkingfare, "parkedCarRegNo":parkedcarregno,"parkingEmail":parkingEmail}
+                                jsonresult.append({"parkingStartDate":parkdate,"remainingParkingDuration":timeremaining, "parkingLocation":parkinglocation, "parkingFare":parkingfare, "parkedCarRegNo":parkedcarregno,"parkingEmail":parkingEmail})
                             # jsonresult='{"parkdate":"'+parkdate+'","timeremaining":"'+ timeremaining+'", "parkinglocation:"'+parkinglocation+'", "parkingfare:"'+parkingfare+'", "parkedcarregno""'+parkedcarregno +'"}'
-                            jsonresult={"parkingStartDate":parkdate,"remainingParkingDuration":timeremaining, "parkingLocation":parkinglocation, "parkingFare":parkingfare, "parkedCarRegNo":parkedcarregno}
                             status="success"
                             status_who=statuswho.GENERIC_STATUS
                         except:
