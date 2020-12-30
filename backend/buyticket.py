@@ -318,7 +318,7 @@ def viewTicketChecker():
                     result=cur.fetchall()
                     if result==[]:
                         status="error"
-                        status_who=statuswho.NO_DATA_TO_DISPLAY
+                        status_who=""
                     else:
                         try:
                             SQL="select parkingstartdate,timeremaining,parkinglocation,parkingfare,parkedcarregno,parkingEmail from " + activepark_view + " where uid in ('" + uid + "')"

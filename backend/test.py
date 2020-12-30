@@ -414,12 +414,13 @@ def SendEmail(EmailId):
         print(e)
     return flag
 
-@app.route("/viewfine",methods=['POST'])
+@app.route("/viewFinesUser",methods=['POST'])
 def viewfine():
     result=-1
     parkingfine=""
     finedate=""
-    jsonresult={}
+    jsonresult=[]
+    paidstatus=""
     try:
         email=request.json["email"]
         status="success"
@@ -452,13 +453,21 @@ def viewfine():
                         status_who=statuswho.NO_DATA_TO_DISPLAY
                     else:
                         try:
-                            SQL="select parkingfine,finedate from " + penalty_table + " where uid in ('" + uid + "')"
+                            SQL="select parkingfine,finedate,carregistrationno,paidstatus from " + penalty_table + " where uid in ('" + uid + "')"
                             cur.execute(SQL)
                             result=cur.fetchall()
-                            parkingfine=str(result[0][0])
-                            finedate=str(result[0][1])
+                            for i in range(len(result)):
+                                parkingfine=str(result[i][0])
+                                finedate=str(result[i][1])
+                                carregistrationno=str(result[i][2])
+                                paidstatus=str(result[i][3])
+                                if (paidstatus=="0"):
+                                    paidstatus="Not Paid"
+                                else:
+                                    paidstatus="Paid"
+                                jsonresult.append({"parkingFine":parkingfine,"fineDate":finedate,"carRegistrationNo":carregistrationno,"paidStatus":paidstatus})
                             # jsonresult='{"parkdate":"'+parkdate+'","timeremaining":"'+ timeremaining+'", "parkinglocation:"'+parkinglocation+'", "parkingfare:"'+parkingfare+'", "parkedcarregno""'+parkedcarregno +'"}'
-                            jsonresult={"parkingfine":parkingfine,"finedate":finedate}
+                            
                             status="success"
                             status_who=statuswho.GENERIC_STATUS
                         except:
@@ -492,7 +501,7 @@ def extendticket():
     parkingStartDate=""
     parkingEndDate=""
     parkingfare_new=""
-    jsonresult={}
+    jsonresult=[]
     try:
         email=request.json["email"]
         carregno=request.json["parkedCarRegNo"]
@@ -526,8 +535,7 @@ def extendticket():
                     try:
                         SQL="select parkingstartdate,parkingenddate,parkingfare,extract(epoch from (parkingenddate-parkingstartdate) / 60 ) from "+ parking_table + " where uid in ('" + uid + "') and parkedcarregno in ('"+carregno+"') and parkingemail in ('"+str(parkingemail)+"')"
                         cur.execute(SQL)
-                        result=cur.fetchall()
-                    
+                        result=cur.fetchall()                    
                         parkingStartDate=result[0][0]
                         parkingEndDate=result[0][1]
                         parkingfare=result[0][2]
@@ -542,7 +550,19 @@ def extendticket():
                     cur.execute(SQL)
                     status="success"
                     status_who=statuswho.PARKING_SUCCESSFUL
-                    jsonresult={"parkingFare":parkingfare_new}
+                    SQL="select parkingstartdate,timeremaining,parkinglocation,parkingfare,parkedcarregno,parkingEmail from " + activepark_view + " where uid in ('" + uid + "')"
+                    cur.execute(SQL)
+                    result=cur.fetchall()
+                    for i in range(len(result)):
+                        parkdate=str(result[i][0])
+                        timeremaining=str(result[i][1])
+                        parkinglocation=str(result[i][2])
+                        parkingfare=str(result[i][3])
+                        parkedcarregno=str(result[i][4])
+                        parkingEmail=str(result[i][5]) 
+                        jsonresult.append({"parkingStartDate":parkdate,"remainingParkingDuration":timeremaining, "parkingLocation":parkinglocation, "parkingFare":parkingfare, "parkedCarRegNo":parkedcarregno,"parkingEmail":parkingEmail})
+
+                    #jsonresult={"parkingFare":parkingfare_new}
                     #result=cur.fetchall()
                 except:
                     status="error"
@@ -565,6 +585,7 @@ def putFine():
     parkedcarregno=""
     try:
         parkedcarregno=request.json["parkedCarRegNo"]
+        parkingfine=request.json["parkingFine"]
         status="success"
     except:
         status="error"
@@ -577,7 +598,7 @@ def putFine():
         status_who=statuswho.DB_CONNECTION_FAILED
     if status=="success":
         try:
-            SQL="select uid from "+ vehicles_table +" where carreregistrationno in ('"+ parkedcarregno +"') and vehicletype='owner'"
+            SQL="select uid from "+ vehicles_table +" where carregistrationno in ('"+ parkedcarregno +"') and vehicletype='owner'"
             cur.execute(SQL)
             uid_temp=cur.fetchall()
             if uid_temp==[]:
@@ -587,26 +608,21 @@ def putFine():
             else:
                 try:
                     uid=str(uid_temp[0][0])
-                    SQL="select 1 from "+ penalty_table + " where uid in ('" + uid + "')"
+                    SQL="insert into " + penalty_table + " values ('" + uid + "', '" +parkingfine +"' , ' " + parkedcarregno+ "', now() , '0' )"
+                    #SQL="select 1 from "+ penalty_table + " where uid in ('" + uid + "')"
                     cur.execute(SQL)
-                    result=cur.fetchall()
-                    if result==[]:
-                        status="error"
-                        status_who=statuswho.NO_DATA_TO_DISPLAY
-                    else:
-                        try:
-                            SQL="select parkingfine,finedate from " + penalty_table + " where uid in ('" + uid + "')"
-                            cur.execute(SQL)
-                            result=cur.fetchall()
-                            parkingfine=str(result[0][0])
-                            finedate=str(result[0][1])
-                            # jsonresult='{"parkdate":"'+parkdate+'","timeremaining":"'+ timeremaining+'", "parkinglocation:"'+parkinglocation+'", "parkingfare:"'+parkingfare+'", "parkedcarregno""'+parkedcarregno +'"}'
-                            jsonresult={"parkingfine":parkingfine,"finedate":finedate}
-                            status="success"
-                            status_who=statuswho.GENERIC_STATUS
-                        except:
-                            status_who=statuswho.TABLE_DOESNOT_EXIST
-                            status="error"
+                    status="success"
+                    status_who=statuswho.GENERIC_STATUS
+                    # result=cur.fetchall()                    
+                    # SQL="select parkingfine,finedate from " + penalty_table + " where uid in ('" + uid + "')"
+                    # cur.execute(SQL)
+                    # result=cur.fetchall()
+                    # parkingfine=str(result[0][0])
+                    # finedate=str(result[0][1])
+                    # # jsonresult='{"parkdate":"'+parkdate+'","timeremaining":"'+ timeremaining+'", "parkinglocation:"'+parkinglocation+'", "parkingfare:"'+parkingfare+'", "parkedcarregno""'+parkedcarregno +'"}'
+                    # jsonresult={"parkingfine":parkingfine,"finedate":finedate}
+                    # status="success"
+                    # status_who=statuswho.GENERIC_STATUS
                 except:
                     status="error"
                     status_who=statuswho.TABLE_DOESNOT_EXIST
