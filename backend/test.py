@@ -25,6 +25,7 @@ penalty_table="tbl_penalty"
 vehicles_table="tbl_vehicles"
 totalFare_View="uv_totalfare"
 history_tabe="tbl_history"
+checker_table="tbl_checker"
 
 @app.after_request
 def after_request(response):
@@ -588,6 +589,7 @@ def putFine():
     try:
         parkedcarregno=request.json["parkedCarRegNo"]
         parkingfine=request.json["parkingFine"]
+        checkerId=request.json["cid"]
         status="success"
     except:
         status="error"
@@ -610,7 +612,7 @@ def putFine():
             else:
                 try:
                     uid=str(uid_temp[0][0])
-                    SQL="insert into " + penalty_table + " values ('" + uid + "', '" +parkingfine +"' , ' " + parkedcarregno+ "', now() , '0' )"
+                    SQL="insert into " + penalty_table + " values ('" + uid + "', '" +parkingfine +"' , ' " + parkedcarregno+ "', now() , '0' ,"+checkerId+")"
                     #SQL="select 1 from "+ penalty_table + " where uid in ('" + uid + "')"
                     cur.execute(SQL)
                     status="success"
@@ -667,42 +669,28 @@ def viewTicketChecker():
         status_who=statuswho.DB_CONNECTION_FAILED
     if status=="success":
         try:
-            SQL="select uid from "+ vehicles_table +" where carregistrationno in ('"+ parkedcarregno +"') and vehicletype='owner'"
+            SQL="select ac.parkingstartdate,ac.timeremaining,ac.parkinglocation,ac.parkingfare,ac.parkedcarregno,ac.parkingEmail,u.email from "+ vehicles_table +"  as v join "+ activepark_view + " as ac on v.uid=ac.uid  join tbl_user as u on u.uid=v.uid  where v.carregistrationno in ('"+ parkedcarregno +"') and v.vehicletype='owner' and ac.parkedcarregno in ('" + parkedcarregno +"')"
             cur.execute(SQL)
-            uid_temp=cur.fetchall()
-            if uid_temp==[]:
+            result=cur.fetchall()
+            if result==[]:
                 result="No user found"
                 status="error"
                 status_who=statuswho.NO_DATA_TO_DISPLAY
             else:
-                try:
-                    uid=str(uid_temp[0][0])
-                    SQL="select 1 from "+ activepark_view + " where uid in ('" + uid + "')"
-                    cur.execute(SQL)
-                    result=cur.fetchall()
-                    if result==[]:
-                        status="error"
-                        status_who=statuswho.NO_DATA_TO_DISPLAY
-                    else:
-                        try:
-                            SQL="select parkingstartdate,timeremaining,parkinglocation,parkingfare,parkedcarregno,parkingEmail from " + activepark_view + " where uid in ('" + uid + "') and parkedcarregno in ('" + parkedcarregno +"')"
-                            cur.execute(SQL)
-                            result=cur.fetchall()
-                            parkdate=str(result[0][0])
-                            timeremaining=str(result[0][1])
-                            parkinglocation=str(result[0][2])
-                            parkingfare=str(result[0][0])
-                            parkedcarregno=str(result[0][4])
-                            parkingEmail=str(result[0][5]) 
-                            jsonresult={"parkingStartDate":parkdate,"remainingParkingDuration":timeremaining, "parkingLocation":parkinglocation, "parkingFare":parkingfare, "parkedCarRegNo":parkedcarregno,"parkingEmail":parkingEmail}
-                            status="success"
-                            status_who=statuswho.GENERIC_STATUS
-                        except:
-                            status_who=statuswho.TABLE_DOESNOT_EXIST
-                            status="error"
+                try:                    
+                    parkdate=str(result[0][0])
+                    timeremaining=str(result[0][1])
+                    parkinglocation=str(result[0][2])
+                    parkingfare=str(result[0][0])
+                    parkedcarregno=str(result[0][4])
+                    parkingEmail=str(result[0][5]) 
+                    email=str(result[0][5])
+                    jsonresult={"parkingStartDate":parkdate,"remainingParkingDuration":timeremaining, "parkingLocation":parkinglocation, "parkingFare":parkingfare, "parkedCarRegNo":parkedcarregno,"parkingEmail":parkingEmail,"email":email}
+                    status="success"
+                    status_who=statuswho.GENERIC_STATUS
                 except:
+                    status_who=statuswho.NO_DATA_TO_DISPLAY
                     status="error"
-                    status_who=statuswho.TABLE_DOESNOT_EXIST
             conn.commit()
             conn.close()
         except:
@@ -753,7 +741,7 @@ def viewTotal():
             else:
                 try:
                     uid=str(uid_temp[0][0])
-                    SQL="select sum(parkingfine) from "+ penalty_table + " where uid in ('" + uid + "')"
+                    SQL="select case when sum(parkingfine)>0 then sum(parkingfine) else '0' end from "+ penalty_table + " where uid in ('" + uid + "') and paidstatus='0'"
                     cur.execute(SQL)
                     result=cur.fetchall()
                     if result==[]:
@@ -762,11 +750,11 @@ def viewTotal():
                     else:
                         try:
                             parkingFine=str(result[0][0])
-                            SQL="select parkingfare from " + totalFare_View + " where uid in ('" + uid + "')"
+                            SQL="select case when sum(parkingfare)> 0 then sum(parkingfare) else '0' end from " + totalFare_View + " where uid in ('" + uid + "') "
                             cur.execute(SQL)
                             result=cur.fetchall()
                             totalFare=str(result[0][0])
-                            jsonresult={"fineAmount":parkingFine + " EUR","ticketAmount":totalFare}
+                            jsonresult={"fineAmount":parkingFine + " EUR","ticketAmount":totalFare + " EUR"}
                             status="success"
                             status_who=statuswho.GENERIC_STATUS
                         except:
@@ -863,141 +851,190 @@ def getTicketHistory():
             result=-1
     return retcommon_status.createJSONResponse(status,status_who,jsonresult)
 
+@app.route("/viewIssuedFine",methods=['POST'])
+def viewIssuedFine():
+    result=-1
+    name=""
+    email=""
+    mobileno=""
+    carRegistrationNo=""
+    fineDate=""
+    paidStatus=""
+    parkingFine=""
+    checkerId=""
+    jsonresult=[]
+    try:
+        checkerId=request.json["checkerId"]
+        status="success"
+    except:
+        status="error"
+        status_who=statuswho.JSON_INPUT_INCORRECT
+    try:
+        conn =psycopg2.connect(dbname=DB_NAME,user=DB_USER,password=DB_PASS,host=DB_HOST)
+        cur=conn.cursor()
+    except:
+        status="error"
+        status_who=statuswho.DB_CONNECTION_FAILED
+    if status=="success":
+        try:
+            SQL="select u.name,u.email,u.mobileno,p.carregistrationno,p.finedate,p.paidstatus,p.parkingfine from "+ penalty_table +" p join tbl_user u on p.uid=u.uid where p.issuedcid in ('"+ checkerId +"')"
+            cur.execute(SQL)
+            result=cur.fetchall()
+            if result==[]:
+                result="No user found"
+                status="error"
+                status_who=statuswho.LOGIN_STATUS_FAIL
+            else:
+                try:
+                    for i in range(len(result)):
+                        name=str(result[i][0])
+                        email=str(result[i][1])
+                        mobileno=str(result[i][2])
+                        carRegistrationNo=str(result[i][3])
+                        fineDate=str(result[i][4])
+                        paidStatus=str(result[i][5])
+                        parkingFine=str(result[i][6])
+                        if (paidStatus=="0"):
+                            paidStatus="Not Paid"
+                        else:
+                            paidStatus="Paid"
+                        jsonresult.append({"name":name,"email":email,"mobileNo":mobileno,"parkingFine":parkingFine + " EUR","fineDate":fineDate,"carRegistrationNo":carRegistrationNo,"paidStatus":paidStatus})
+                    # jsonresult='{"parkdate":"'+parkdate+'","timeremaining":"'+ timeremaining+'", "parkinglocation:"'+parkinglocation+'", "parkingfare:"'+parkingfare+'", "parkedcarregno""'+parkedcarregno +'"}'
+                    
+                    status="success"
+                    status_who=statuswho.GENERIC_STATUS
+                except:
+                    status="error"
+                    status_who=statuswho.TABLE_DOESNOT_EXIST
+            conn.commit()
+            conn.close()
+        except:
+            status="error"
+            status_who=statuswho.TABLE_DOESNOT_EXIST
+    if result==[]:
+            result=-1
+    return retcommon_status.createJSONResponse(status,status_who,jsonresult)
+
+
+@app.route("/loginValidChecker",methods=['POST'])
+def loginValidChecker():
+    result=-1
+    status="default"
+    status_who=""
+    Username=""
+    Password=""
+    authentication=""
+    firstname=""
+    surname=""
+    email=""
+    licenseNumber=""
+    mobileNumber=""
+    checkerId=""
+    jsonresult={}
+    #jsonstr=json.loads(request.json,strict=False)
+    #print(jsonstr)
+    try:
+        checkerId=request.json["checkerId"]
+        Password=request.json["password"]
+        status="success"
+    except:
+        status="error"
+        status_who=statuswho.JSON_INPUT_INCORRECT
+    try:
+        conn =psycopg2.connect(dbname=DB_NAME,user=DB_USER,password=DB_PASS,host=DB_HOST)
+        cur=conn.cursor()
+    except:
+        status="error"
+        status_who=statuswho.DB_CONNECTION_FAILED
+    if status=="success":
+        try:
+            SQL="select 1 from "+ checker_table +" where cid in ('"+ checkerId +"') and Password in ('"+ Password +"')"
+            cur.execute(SQL)
+            result=cur.fetchall()
+            if result==[]:
+                result="false"
+                status="error"
+                status_who=statuswho.LOGIN_STATUS_FAIL
+            else:
+                try:
+                    status="success"
+                    status_who=statuswho.LOGIN_STATUS
+                    authentication="true"
+                    SQL="select name,surname,email,mobileno,location from "+ checker_table +" where cid in ('"+ checkerId +"')"
+                    cur.execute(SQL)
+                    result=cur.fetchall()
+                    firstname=str(result[0][0])
+                    surname=str(result[0][1])
+                    email=str(result[0][2])
+                    mobileNumber=str(result[0][3])
+                    location=str(result[0][4])
+                    jsonresult={"authentication": authentication,"email": email,"firstName": firstname,"lastName":surname,"mobileNumber": mobileNumber,"location":location}
+                except:
+                    status_who=statuswho.TABLE_DOESNOT_EXIST
+                    status="error"
+            conn.commit()
+            conn.close()
+        except:
+            #print(SQL)
+            status="error"
+            status_who=statuswho.TABLE_DOESNOT_EXIST
+    if result==[]:
+            result=-1
+    return retcommon_status.createJSONResponse(status,status_who,jsonresult)
+
+@app.route("/clearPayment",methods=['POST'])
+def clearPayment():
+    result=-1
+    jsonresult=[]
+    SQL=""
+    try:
+        email=request.json["email"]
+        status="success"
+        paymentType=request.json["paymentType"]
+    except:
+        status="error"
+        status_who=statuswho.JSON_INPUT_INCORRECT
+    try:
+        conn =psycopg2.connect(dbname=DB_NAME,user=DB_USER,password=DB_PASS,host=DB_HOST)
+        cur=conn.cursor()
+    except:
+        status="error"
+        status_who=statuswho.DB_CONNECTION_FAILED
+    if status=="success":
+        try:
+            SQL="select uid from "+ User_table +" where email in ('"+ email +"')"
+            cur.execute(SQL)
+            uid_temp=cur.fetchall()
+            if uid_temp==[]:
+                result="No user found"
+                status="error"
+                status_who=statuswho.LOGIN_STATUS_FAIL
+            else:
+                try:
+                    uid=str(uid_temp[0][0])
+                    if (paymentType=="Fine"):
+                        SQL="update  "+ penalty_table + " set paidstatus='1' where uid in ('" + uid + "') and paidstatus='0'"
+                        cur.execute(SQL)
+                    elif (paymentType=="Fare"):
+                        SQL="update  "+ parking_table + " set paidstatus='1' where uid in ('" + uid + "') and parkingactive='0' and paidstatus='0'"
+                        cur.execute(SQL)
+                        SQL="update  "+ history_tabe + " set paidstatus='1' where uid in ('" + uid + "') and paidstatus='0'"
+                        cur.execute(SQL)
+                    status="success"
+                    status_who=statuswho.GENERIC_STATUS
+                except:
+                    status="error"
+                    status_who=statuswho.NO_DATA_TO_DISPLAY
+            conn.commit()
+            conn.close()
+        except:
+            status="error"
+            status_who=statuswho.TABLE_DOESNOT_EXIST
+    if result==[]:
+            result=-1
+    return retcommon_status.createJSONResponse(status,status_who,jsonresult)
+
+
+
 if __name__=="__main__":
     app.run(port=5000,debug=True)
-
-# @app.route("/viewTotalFines",methods=['POST'])
-# def viewTotalFines():
-#     result=-1
-#     # jsonresult={}
-#     jsonresult={}
-#     status="default"
-#     email=""
-#     status_who=""
-#     parkdate=""
-#     timeremaining=""
-#     parkinglocation=""
-#     parkingfare=""
-#     parkedcarregno=""
-#     parkingEmail=""
-#     uid_temp=""
-#     uid=""
-#     try:
-#         email=request.json["email"]
-#         status="success"
-#     except:
-#         status="error"
-#         status_who=statuswho.JSON_INPUT_INCORRECT
-#     try:
-#         conn =psycopg2.connect(dbname=DB_NAME,user=DB_USER,password=DB_PASS,host=DB_HOST)
-#         cur=conn.cursor()
-#     except:
-#         status="error"
-#         status_who=statuswho.DB_CONNECTION_FAILED
-#     if status=="success":
-#         try:
-#             SQL="select uid from "+ User_table +" where email in ('"+ email +"')"
-#             cur.execute(SQL)
-#             uid_temp=cur.fetchall()
-#             if uid_temp==[]:
-#                 result="No user found"
-#                 status="error"
-#                 status_who=statuswho.NO_DATA_TO_DISPLAY
-#             else:
-#                 try:
-#                     uid=str(uid_temp[0][0])
-#                     SQL="select sum(parkingfine) from "+ penalty_table + " where uid in ('" + uid + "')"
-#                     cur.execute(SQL)
-#                     result=cur.fetchall()
-#                     if result==[]:
-#                         status="error"
-#                         status_who=statuswho.NO_DATA_TO_DISPLAY
-#                     else:
-#                         try:
-#                             jsonresult={"parkingFine":str(result[0][0])}
-#                             status="success"
-#                             status_who=statuswho.GENERIC_STATUS
-#                         except:
-#                             status_who=statuswho.TABLE_DOESNOT_EXIST
-#                             status="error"
-#                 except:
-#                     status="error"
-#                     status_who=statuswho.TABLE_DOESNOT_EXIST
-#             conn.commit()
-#             conn.close()
-#         except:
-#             status="error"
-#             status_who=statuswho.TABLE_DOESNOT_EXIST
-#     if result==[]:
-#             result=-1
-#     return retcommon_status.createJSONResponse(status,status_who,jsonresult)
-
-# @app.route("/viewTotalFare",methods=['POST'])
-# def viewTotalFare():
-#     result=-1
-#     # jsonresult={}
-#     jsonresult={}
-#     status="default"
-#     email=""
-#     status_who=""
-#     parkdate=""
-#     timeremaining=""
-#     parkinglocation=""
-#     parkingfare=""
-#     parkedcarregno=""
-#     parkingEmail=""
-#     uid_temp=""
-#     uid=""
-#     try:
-#         email=request.json["email"]
-#         status="success"
-#     except:
-#         status="error"
-#         status_who=statuswho.JSON_INPUT_INCORRECT
-#     try:
-#         conn =psycopg2.connect(dbname=DB_NAME,user=DB_USER,password=DB_PASS,host=DB_HOST)
-#         cur=conn.cursor()
-#     except:
-#         status="error"
-#         status_who=statuswho.DB_CONNECTION_FAILED
-#     if status=="success":
-#         try:
-#             SQL="select uid from "+ User_table +" where email in ('"+ email +"')"
-#             cur.execute(SQL)
-#             uid_temp=cur.fetchall()
-#             if uid_temp==[]:
-#                 result="No user found"
-#                 status="error"
-#                 status_who=statuswho.LOGIN_STATUS_FAIL
-#             else:
-#                 try:
-#                     uid=str(uid_temp[0][0])
-#                     SQL="select 1 from "+ totalFare_View + " where uid in ('" + uid + "')"
-#                     cur.execute(SQL)
-#                     result=cur.fetchall()
-#                     if result==[]:
-#                         status="error"
-#                         status_who=statuswho.NO_DATA_TO_DISPLAY
-#                     else:
-#                         try:
-#                             SQL="select parkingfare from " + totalFare_View + " where uid in ('" + uid + "')"
-#                             cur.execute(SQL)
-#                             result=cur.fetchall()
-#                             totalFare=str(result[0][0])
-#                             jsonresult={"totalFare":totalFare}
-#                             status="success"
-#                             status_who=statuswho.GENERIC_STATUS
-#                         except:
-#                             status_who=statuswho.TABLE_DOESNOT_EXIST
-#                             status="error"
-#                 except:
-#                     status="error"
-#                     status_who=statuswho.TABLE_DOESNOT_EXIST
-#             conn.commit()
-#             conn.close()
-#         except:
-#             status="error"
-#             status_who=statuswho.TABLE_DOESNOT_EXIST
-#     if result==[]:
-#             result=-1
-#     return retcommon_status.createJSONResponse(status,status_who,jsonresult)
