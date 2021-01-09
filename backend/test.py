@@ -1,5 +1,5 @@
 #exception message printing pending
-from flask import Flask,make_response,request,jsonify
+from flask import Flask,make_response,request,jsonify,session,url_for,redirect
 import psycopg2
 import json
 import jwt
@@ -12,9 +12,20 @@ from email.mime.text import MIMEText
 import smtplib
 import parking_fare
 from flask_cors import CORS
+from flask_restful import Resource, Api
+from flask_sqlalchemy import SQLAlchemy
+import socket
+import hashlib
+from werkzeug.security import generate_password_hash, check_password_hash
+import os, sys
+sys.path.append(os.getcwd())
+import reg_model as registrationModel
+import app_configuration as appConf
+import update_model as update
 
 app=Flask(__name__)
 CORS(app)
+api = Api(app)
 
 app.config['SECRET_KEY']='secret'
 
@@ -55,7 +66,7 @@ DB_HOST="localhost"
 DB_NAME="postgres"
 DB_USER="postgres"
 DB_PASS="Password"
-
+db = SQLAlchemy(app)
 # conn =psycopg2.connect(dbname=DB_NAME,user=DB_USER,password=DB_PASS,host=DB_HOST)
 # cur=conn.cursor()
 # #cur.execute("CREATE TABLE Users (ID INT, Username varchar, PasswordHash varchar);")
@@ -285,7 +296,7 @@ def buyticket():
                             cur.execute(SQL)
                             status="success"
                             status_who=statuswho.PARKING_SUCCESSFUL
-                            jsonresult={"parkingFare":parkingfare}
+                            jsonresult={"parkingFare":str(parkingfare) + " EUR"}
                         except:
                             status_who=statuswho.PARKING_INSERTION_FAILED
                             status="error"
@@ -579,17 +590,18 @@ def extendticket():
             result=-1
     return retcommon_status.createJSONResponse(status,status_who,jsonresult)
 
-@app.route("/putFine",methods=['POST'])
+@app.route("/issueFine",methods=['POST'])
 def putFine():
     result=-1
     parkingfine=""
     finedate=""
     jsonresult={}
     parkedcarregno=""
+    checkerId=""
     try:
         parkedcarregno=request.json["parkedCarRegNo"]
         parkingfine=request.json["parkingFine"]
-        checkerId=request.json["cid"]
+        checkerId=request.json["empId"]
         status="success"
     except:
         status="error"
@@ -831,7 +843,10 @@ def getTicketHistory():
                                 parkinglocation=str(result[i][5])
                                 parkingfare=str(result[i][6])
                                 parkedcarregno=str(result[i][7])
-                                paidstatus=str(result[i][8])
+                                if str(result[i][8]) =='0':
+                                    paidstatus='unpaid'
+                                else:
+                                    paidstatus='paid'
                                 parkingEmail=str(result[i][9])
                                 jsonresult.append({"name":name,"email":email,"parkingStartDate":parkingstartdate,"parkingEndDate":parkingenddate, "parkingLocation":parkinglocation, "parkingFare":parkingfare, "parkedCarRegNo":parkedcarregno,"paymentStatus":paidstatus,"parkingEmail":parkingEmail})
                             status="success"
@@ -864,7 +879,7 @@ def viewIssuedFine():
     checkerId=""
     jsonresult=[]
     try:
-        checkerId=request.json["checkerId"]
+        checkerId=request.json["empId"]
         status="success"
     except:
         status="error"
@@ -934,7 +949,7 @@ def loginValidChecker():
     #jsonstr=json.loads(request.json,strict=False)
     #print(jsonstr)
     try:
-        checkerId=request.json["checkerId"]
+        checkerId=request.json["empId"]
         Password=request.json["password"]
         status="success"
     except:
@@ -968,7 +983,7 @@ def loginValidChecker():
                     email=str(result[0][2])
                     mobileNumber=str(result[0][3])
                     location=str(result[0][4])
-                    jsonresult={"authentication": authentication,"email": email,"firstName": firstname,"lastName":surname,"mobileNumber": mobileNumber,"location":location}
+                    jsonresult={"authentication": authentication,"empId":checkerId,"email": email,"firstName": firstname,"lastName":surname,"mobileNumber": mobileNumber,"location":location}
                 except:
                     status_who=statuswho.TABLE_DOESNOT_EXIST
                     status="error"
@@ -990,7 +1005,7 @@ def clearPayment():
     try:
         email=request.json["email"]
         status="success"
-        paymentType=request.json["paymentType"]
+        paymentType=request.json["pendingAmountType"]
     except:
         status="error"
         status_who=statuswho.JSON_INPUT_INCORRECT
@@ -1012,10 +1027,10 @@ def clearPayment():
             else:
                 try:
                     uid=str(uid_temp[0][0])
-                    if (paymentType=="Fine"):
+                    if (paymentType=="fineAmount"):
                         SQL="update  "+ penalty_table + " set paidstatus='1' where uid in ('" + uid + "') and paidstatus='0'"
                         cur.execute(SQL)
-                    elif (paymentType=="Fare"):
+                    elif (paymentType=="ticketAmount"):
                         SQL="update  "+ parking_table + " set paidstatus='1' where uid in ('" + uid + "') and parkingactive='0' and paidstatus='0'"
                         cur.execute(SQL)
                         SQL="update  "+ history_tabe + " set paidstatus='1' where uid in ('" + uid + "') and paidstatus='0'"
@@ -1034,6 +1049,81 @@ def clearPayment():
             result=-1
     return retcommon_status.createJSONResponse(status,status_who,jsonresult)
 
+class DBConnection(Resource):
+    def get(self):
+        return registrationModel.getDbConnection()
+
+class CreateRegistrationTable(Resource):
+    def get(self):
+        return registrationModel.createRegistrationTable()
+        
+
+class FetchAllUserData(Resource):
+    def get(self):
+        return registrationModel.fetchDataFromTable(appConf.registrationtableName)
+        
+
+class DropRegistrationTable(Resource):
+    def delete(self):
+        return registrationModel.dropTable(appConf.registrationtableName)
+
+
+class InsertRegistrationData(Resource):
+    def post(self):
+        inputJson = request.get_json()
+        # hashed_password = hashlib.sha3_512(inputJson["password"].encode())
+        # inputJson["password"] = hashed_password.hexdigest()
+
+        print (inputJson)
+        return registrationModel.insertDataIntoTable(appConf.registrationtableName,inputJson["firstName"],inputJson["lastName"],inputJson["email"],inputJson["password"],inputJson["mobileNumber"],inputJson["licenseNumber"])
+
+
+api.add_resource(DBConnection,"/getDbConnection")
+api.add_resource(DropRegistrationTable,"/dropRegistrationTable")
+api.add_resource(FetchAllUserData,"/usersData")
+api.add_resource(CreateRegistrationTable,"/createRegistrationtable")
+api.add_resource(InsertRegistrationData,"/addNewRegistration")
+
+class updateProfileData(Resource):
+    def post(self):
+        name = ""
+        surname = ""
+        email = ""
+        mobileno = ""
+        inputJson = request.get_json()
+        name = inputJson["firstName"]
+        surname = inputJson["lastName"]
+        email = inputJson["email"]
+        mobileno = inputJson["mobileNumber"]
+
+        return update.UpdateUsertable(appConf.registrationtableName,name,surname,email,mobileno)
+
+class showVehicleData(Resource):
+    def post(self):
+        inputJson = request.get_json()
+        print (inputJson)
+        return update.showVehicleData(appConf.vehiclestableName,appConf.registrationtableName,inputJson["email"])
+
+class AddVehicleData(Resource):
+    def post(self):
+
+        inputJson = request.get_json()
+        return update.addVehicleData(appConf.vehiclestableName,appConf.registrationtableName,inputJson["carRegNumber"],inputJson["vehicleType"],inputJson["email"])
+
+
+#api.add_resource(DBConnection,"/getDbConnection")
+api.add_resource(updateProfileData,"/updateProfileData")
+api.add_resource(showVehicleData,"/showVehicleData")
+api.add_resource(AddVehicleData,"/addVehicleData")
+
+
+
+class checkOwner(Resource):
+    def post(self):
+        inputJson = request.get_json()
+        print (inputJson)
+        return update.checkOwner(appConf.vehiclestableName,appConf.registrationtableName,inputJson["carRegNumber"])
+api.add_resource(checkOwner,"/checkOwner")
 
 
 if __name__=="__main__":
