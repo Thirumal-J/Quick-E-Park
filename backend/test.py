@@ -284,7 +284,8 @@ def buyticket():
             else:
                 try:
                     uid=str(uid_temp[0][0])
-                    SQL="select 1 from "+ parking_table + " where uid in ('" + uid + "') and parkedcarregno in ('" + carregno + "')"
+                    # SQL="select 1 from "+ parking_table + " where uid in ('" + uid + "') and parkedcarregno in ('" + carregno + "')"
+                    SQL="select 1 from "+ parking_table + " where  parkedcarregno in ('" + carregno + "')"
                     #SQL="select 1 from " + parking_table + " where uid in ('"+ uid + "')"# and ParkedCarRegNo in ('"+ carregno +"') and parkingactive in ('1')"
                     print(SQL)
                     cur.execute(SQL)
